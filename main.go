@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"os/user"
@@ -12,6 +13,8 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 func main() {
@@ -49,7 +52,6 @@ func main() {
 
 	learnButton2 := widget.NewButton("Learn about the Host ", func() {
 		learnWindow2 := myApp.NewWindow("Learn the Host")
-		// learnText2 := widget.NewLabel("ZorinOS is Zorina user-friendly Linux distribution based on Ubuntu.\n\nHere are some basics:\n- The panel at the bottom is similar to Windows and macOS.\n- The 'Start' menu gives you access to all your applications.\n- You can install new software from the 'Software' application.")
 		learnText2 := widget.NewLabel(getSystemInfo())
 		learnWindow2.SetContent(container.NewVBox(learnText2))
 		learnWindow2.Resize(fyne.NewSize(400, 100))
@@ -70,16 +72,7 @@ func main() {
 		img,
 		link,
 		widget.NewLabel("Welcome to your Kindworks Startup screen"),
-		//	widget.NewLabel("Create Account"),
-		//	nameEntry,
-		//		registerButton,
-		//		accountLabel,
-		//		widget.NewSeparator(),
-		// widget.NewLabel("System Information"),
-		//sysInfoLabel,
 		widget.NewSeparator(),
-		//	updateButton,
-		//		updateOutputLabel,
 		learnButton,
 		learnButton2,
 	)
@@ -107,5 +100,17 @@ func getSystemInfo() string {
 		return "Could not get hostname"
 	}
 
-	return fmt.Sprintf("OS: %s\nArchitecture: %s\nUsername: %s\nHostname: %s", runtime.GOOS, runtime.GOARCH, currentUser.Username, hostname)
+	// Get memory info
+	memInfo, err := mem.VirtualMemory()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Get disk info
+	diskInfo, err := disk.Usage("/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return fmt.Sprintf("OS: %s \nArchitecture: %s \nUsername: %s\nHostname: %s\nMemory: %d MB \nDiskInfo: %d GB", runtime.GOOS, runtime.GOARCH, currentUser.Username, hostname, memInfo.Total/1024/1024, diskInfo.Total/1024/1024)
 }
