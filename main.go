@@ -111,6 +111,5 @@ func getSystemInfo() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return fmt.Sprintf("OS: %s \nArchitecture: %s \nUsername: %s\nHostname: %s\nMemory: %d MB \nDiskInfo: %d GB", runtime.GOOS, runtime.GOARCH, currentUser.Username, hostname, memInfo.Total/1024/1024, diskInfo.Total/1024/1024)
 }
