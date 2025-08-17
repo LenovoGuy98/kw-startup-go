@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 
@@ -31,22 +32,16 @@ func main() {
 	println("Welcome to your new Kindworks laptop")
 
 	// Update Software
-	//	updateOutputLabel := widget.NewLabel("")
-	//	updateButton := widget.NewButton("Update Software", func() {
-	//		cmd := exec.Command("sudo", "apt", "update")
-	//		output, err := cmd.CombinedOutput()
-	//		if err != nil {
-	//			updateOutputLabel.SetText(fmt.Sprintf("Error updating: %s\n%s", err, string(output)))
-	//			return
-	//		}
-	//		cmd = exec.Command("sudo", "apt", "upgrade", "-y")
-	//		output, err = cmd.CombinedOutput()
-	//		if err != nil {
-	//			updateOutputLabel.SetText(fmt.Sprintf("Error upgrading: %s\n%s", err, string(output)))
-	//			return
-	//		}
-	//		updateOutputLabel.SetText(string(output))
-	//	})
+	updateOutputLabel := widget.NewLabel("")
+	updateButton := widget.NewButton("check version", func() {
+		cmd := exec.Command("uname", "-r", "-o")
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			updateOutputLabel.SetText(fmt.Sprintf("Error: %s\n%s", err, string(output)))
+			return
+		}
+		updateOutputLabel.SetText(string(output))
+	})
 
 	// Learn about host
 
@@ -67,14 +62,22 @@ func main() {
 		learnWindow.Show()
 	})
 
+	// Your Linux System
+	linuxSystemLink := widget.NewHyperlink("Your Linux System", parseURL("file:///home/shaun/projects/kw-startup/documentation/Your-Linux-system.odt"))
+
 	// Layout
 	content := container.NewVBox(
 		img,
 		link,
 		widget.NewLabel("Welcome to your Kindworks Startup screen"),
 		widget.NewSeparator(),
+		linuxSystemLink,
+		updateButton,
+		updateOutputLabel,
 		learnButton,
 		learnButton2,
+		widget.NewSeparator(),
+		//	docOutlineLink,
 	)
 
 	myWindow.SetContent(content)
