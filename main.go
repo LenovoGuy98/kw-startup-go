@@ -44,7 +44,6 @@ func main() {
 	})
 
 	// Learn about host
-
 	learnButton2 := widget.NewButton("Learn about the Host ", func() {
 		learnWindow2 := myApp.NewWindow("Learn the Host")
 		learnText2 := widget.NewLabel(getSystemInfo())
