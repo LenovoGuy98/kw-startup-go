@@ -12,7 +12,7 @@ A simple GUI application for Kindworks laptops that provides easy access to syst
 ## Requirements
 
 - Go
-- Fyne library and its dependencies.
+- goGtk library and its dependencies.
 
 ## Installation
 
