@@ -1,117 +1,223 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/url"
-	"os"
 	"os/exec"
-	"os/user"
 	"runtime"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
-	"github.com/shirou/gopsutil/v3/disk"
-	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/gotk3/gotk3/gtk"
 )
 
 func main() {
-	myApp := app.New()
-	myWindow := myApp.NewWindow("Kindworks Startup")
+	// Initialize GTK without command-line arguments.
+	gtk.Init(nil)
 
-	// Kindworks Image
-	img := canvas.NewImageFromFile("kindworks.png")
-	img.FillMode = canvas.ImageFillContain
-	img.SetMinSize(fyne.NewSize(200, 200))
+	settings, err := gtk.SettingsGetDefault()
+	if err != nil {
+		log.Fatal("Unable to get settings:", err)
+	}
+	settings.SetProperty("gtk-theme-name", "Adwaita-dark")
 
-	// Link to Kindworks website
-	link := widget.NewHyperlink("https://dokindworks.org", parseURL("https://dokindworks.org"))
-	println("Welcome to your new Kindworks laptop")
-
-	// Update Software
-	updateOutputLabel := widget.NewLabel("")
-	updateButton := widget.NewButton("check version", func() {
-		cmd := exec.Command("uname", "-r", "-o")
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			updateOutputLabel.SetText(fmt.Sprintf("Error: %s\n%s", err, string(output)))
-			return
-		}
-		updateOutputLabel.SetText(string(output))
+	// Create a new top-level window.
+	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
+	if err != nil {
+		log.Fatal("Unable to create window:", err)
+	}
+	win.SetProperty("gtk-theme-name", "Adwaita-dark")
+	win.SetTitle("Kindworks Startup")
+	win.Connect("destroy", func() {
+		gtk.MainQuit()
 	})
+	win.SetDefaultSize(300, 200)
+	win.SetPosition(gtk.WIN_POS_CENTER)
 
-	// Learn about host
-	learnButton2 := widget.NewButton("Learn about the Host ", func() {
-		learnWindow2 := myApp.NewWindow("Learn the Host")
-		learnText2 := widget.NewLabel(getSystemInfo())
-		learnWindow2.SetContent(container.NewVBox(learnText2))
-		learnWindow2.Resize(fyne.NewSize(400, 100))
-		learnWindow2.Show()
-	})
+	// Create a vertical box container.
+	box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 6)
+	if err != nil {
+		log.Fatal("Unable to create box:", err)
+	}
+	win.Add(box)
 
-	// Learn ZorinOS
-	learnButton := widget.NewButton("Learn about your Laptop", func() {
-		learnWindow := myApp.NewWindow("Learn the OS")
-		learnText := widget.NewLabel("ZorinOS is Zorina user-friendly Linux distribution based on Ubuntu.\n\nHere are some basics:\n- The panel at the bottom is similar to Windows and macOS.\n- The 'Start' menu gives you access to all your applications.\n- You can install new software from the 'Software' application.")
-		learnWindow.SetContent(container.NewVBox(learnText))
-		learnWindow.Resize(fyne.NewSize(400, 200))
-		learnWindow.Show()
-	})
+	// Add Kindworks image.
+	img, err := gtk.ImageNewFromFile("kindworks.png")
+	if err != nil {
+		log.Println("Could not load image:", err)
+	} else {
+		box.PackStart(img, false, false, 0)
+	}
 
-	// Your Linux System
-	linuxSystemLink := widget.NewHyperlink("Your Linux System", parseURL("file:///home/shaun/projects/kw-startup/documentation/Your-Linux-system.odt"))
+	// Add a link button to dokindworks.org.
+	linkButton, err := gtk.LinkButtonNewWithLabel("https://dokindworks.org", "Visit Kindworks")
+	if err != nil {
+		log.Fatal("Unable to create link button:", err)
+	}
+	box.PackStart(linkButton, false, false, 0)
 
-	// Layout
-	content := container.NewVBox(
-		img,
-		link,
-		widget.NewLabel("Welcome to your Kindworks Startup screen"),
-		widget.NewSeparator(),
-		linuxSystemLink,
-		updateButton,
-		updateOutputLabel,
-		learnButton,
-		learnButton2,
-		widget.NewSeparator(),
-		//	docOutlineLink,
-	)
+	// Create a new label and handle the error.
+	myLabel, err := gtk.LabelNew("Welcome to your new computer! ")
+	if err != nil {
+		log.Fatal("Unable to create label:", err)
+	}
+	myLabel.SetMarkup("<b>Welcome to your new computer </b>")
 
-	myWindow.SetContent(content)
-	myWindow.Resize(fyne.NewSize(400, 400))
-	myWindow.ShowAndRun()
+	box.PackStart(myLabel, false, false, 0)
+
+	//NewLabel, err
+
+	// ewLabel("Welcome to your Kindworks Startup screen"),
+
+	// Add a button to show system information.
+	sysInfoButton, err := gtk.ButtonNewWithLabel("Show System Information")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+	sysInfoButton.Connect("clicked", showSystemInfo)
+	box.PackStart(sysInfoButton, false, false, 0)
+
+	// Add a button to open the PDF file.
+
+	pdfButton, err := gtk.ButtonNewWithLabel("Open PDF")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+
+	pdfButton.Connect("clicked", openPDF)
+	box.PackStart(pdfButton, false, false, 0)
+
+	// Create a horizontal box for application buttons.
+	appBox, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 6)
+	if err != nil {
+		log.Fatal("Unable to create box:", err)
+	}
+	box.PackStart(appBox, false, false, 0)
+
+	// Add a button for Firefox.
+
+	firefoxButton, err := gtk.ButtonNewWithLabel("Firefox")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+	firefoxButton.Connect("clicked", launchFirefox)
+	appBox.PackStart(firefoxButton, true, true, 0)
+
+	// Add a button for LibreOffice.
+
+	libreOfficeButton, err := gtk.ButtonNewWithLabel("LibreOffice")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+	libreOfficeButton.Connect("clicked", launchLibreOffice)
+	appBox.PackStart(libreOfficeButton, true, true, 0)
+
+	// Add a button for Zoom.
+
+	zoomButton, err := gtk.ButtonNewWithLabel("Zoom")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+	zoomButton.Connect("clicked", launchZoom)
+	appBox.PackStart(zoomButton, true, true, 0)
+
+	// Show the window and all its widgets.
+	win.ShowAll()
+
+	// Start the GTK main loop.
+	gtk.Main()
 }
 
-func parseURL(urlStr string) *url.URL {
-	link, err := url.Parse(urlStr)
+func showSystemInfo() {
+	// Create a new dialog.
+	dialog, err := gtk.DialogNew()
 	if err != nil {
-		fyne.LogError("Could not parse URL", err)
+		log.Println("Unable to create dialog:", err)
+		return
 	}
-	return link
+	dialog.SetTitle("System Information")
+	dialog.SetDefaultSize(400, 300)
+
+	// Get the content area of the dialog.
+	contentArea, err := dialog.GetContentArea()
+	if err != nil {
+		log.Println("Unable to get content area:", err)
+		return
+	}
+
+	// Create a new text view.
+	textView, err := gtk.TextViewNew()
+	if err != nil {
+		log.Println("Unable to create text view:", err)
+		return
+	}
+	textView.SetEditable(false)
+	textView.SetWrapMode(gtk.WRAP_WORD)
+
+	// Get the text buffer.
+	buffer, err := textView.GetBuffer()
+	if err != nil {
+		log.Println("Unable to get buffer:", err)
+		return
+	}
+
+	// Get system information.
+	info := "OS: " + runtime.GOOS + "\n"
+	info += "Arch: " + runtime.GOARCH + "\n"
+	cmd := exec.Command("hostname")
+	out, err := cmd.Output()
+	if err == nil {
+		info += "Hostname: " + string(out)
+	}
+	cmd = exec.Command("uname", "-a")
+	out, err = cmd.Output()
+	if err == nil {
+		info += "Uname: " + string(out)
+	}
+	cmd = exec.Command("sudo", "dmidecode", "-s", "system-serial-number")
+	out, err = cmd.Output()
+	if err == nil {
+		info += "Serial Number: " + string(out)
+	} else {
+		info += "Serial Number: Not available (requires root privileges)"
+	}
+
+	buffer.SetText(info)
+
+	// Add the text view to the dialog.
+	contentArea.Add(textView)
+
+	// Add a close button.
+	dialog.AddButton("Close", gtk.RESPONSE_CLOSE)
+	dialog.Connect("response", func() {
+		dialog.Destroy()
+	})
+
+	// Show the dialog.
+	dialog.ShowAll()
 }
 
-func getSystemInfo() string {
-	currentUser, err := user.Current()
+func openPDF() {
+	err := exec.Command("xdg-open", "Your-Linux-system.pdf").Start()
 	if err != nil {
-		return "Could not get user info"
+		log.Println("Could not open PDF:", err)
 	}
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "Could not get hostname"
-	}
+}
 
-	// Get memory info
-	memInfo, err := mem.VirtualMemory()
+func launchFirefox() {
+	err := exec.Command("firefox").Start()
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Could not launch application:", err)
 	}
+}
 
-	// Get disk info
-	diskInfo, err := disk.Usage("/")
+func launchLibreOffice() {
+	err := exec.Command("libreoffice").Start()
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Could not launch application:", err)
 	}
-	return fmt.Sprintf("OS: %s \nArchitecture: %s \nUsername: %s\nHostname: %s\nMemory: %d MB \nDiskInfo: %d GB", runtime.GOOS, runtime.GOARCH, currentUser.Username, hostname, memInfo.Total/1024/1024, diskInfo.Total/1024/1024)
+}
+
+func launchZoom() {
+	err := exec.Command("zoom-client").Start()
+	if err != nil {
+		log.Println("Could not launch application:", err)
+	}
 }
