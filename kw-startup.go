@@ -1,17 +1,20 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 	"os/exec"
 	"runtime"
-
+    _ "embed"
 	"github.com/gotk3/gotk3/gtk"
 )
+
+//go:embed Your-Linux-system.pdf
+var pdfData []byte
 
 func main() {
 	// Initialize GTK without command-line arguments.
 	gtk.Init(nil)
-
 	settings, err := gtk.SettingsGetDefault()
 	if err != nil {
 		log.Fatal("Unable to get settings:", err)
@@ -23,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
 	}
-	win.SetProperty("gtk-theme-name", "Adwaita-dark")
+	
 	win.SetTitle("Kindworks Startup")
 	win.Connect("destroy", func() {
 		gtk.MainQuit()
@@ -195,7 +198,20 @@ func showSystemInfo() {
 }
 
 func openPDF() {
-	err := exec.Command("xdg-open", "Your-Linux-system.pdf").Start()
+	tempFile, err := ioutil.TempFile("", "*.pdf")
+	if err != nil {
+		log.Println("Could not create temporary file:", err)
+		return
+	}
+	defer tempFile.Close()
+
+	_, err = tempFile.Write(pdfData)
+	if err != nil {
+		log.Println("Could not write to temporary file:", err)
+		return
+	}
+
+	err = exec.Command("xdg-open", tempFile.Name()).Start()
 	if err != nil {
 		log.Println("Could not open PDF:", err)
 	}
