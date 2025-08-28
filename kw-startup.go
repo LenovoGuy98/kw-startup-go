@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gotk3/gotk3/gdk"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -11,6 +12,9 @@ import (
 
 //go:embed Your-Linux-system.pdf
 var pdfData []byte
+
+//go:embed kindworks.png
+var pngData []byte
 
 func main() {
 	// Initialize GTK without command-line arguments.
@@ -42,7 +46,23 @@ func main() {
 	win.Add(box)
 
 	// Add Kindworks image.
-	img, err := gtk.ImageNewFromFile("kindworks.png")
+	pixbufLoader, err := gdk.PixbufLoaderNew()
+	if err != nil {
+		log.Fatal("Unable to create pixbuf loader:", err)
+	}
+	_, err = pixbufLoader.Write(pngData)
+	if err != nil {
+		log.Fatal("Unable to write to pixbuf loader:", err)
+	}
+	err = pixbufLoader.Close()
+	if err != nil {
+		log.Fatal("Unable to close pixbuf loader:", err)
+	}
+	pixbuf, err := pixbufLoader.GetPixbuf()
+	if err != nil {
+		log.Fatal("Unable to get pixbuf:", err)
+	}
+	img, err := gtk.ImageNewFromPixbuf(pixbuf)
 	if err != nil {
 		log.Println("Could not load image:", err)
 	} else {
