@@ -216,7 +216,7 @@ func launchLibreOffice() {
 }
 
 func launchZoom() {
-	err := exec.Command("zoom-client").Start()
+	err := exec.Command("zoom").Start()
 	if err != nil {
 		log.Println("Could not launch application:", err)
 	}
