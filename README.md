@@ -15,6 +15,10 @@ A simple GUI application for Kindworks laptops that provides easy access to syst
 - goGtk library and its dependencies.
 
 ```bash
+sudo apt install golang  golang-github-gotk3-gotk3-dev
+```
+
+```bash
 sudo apt-get install libgtk-3-dev libglib2.0-dev
 ```
 
