@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/gotk3/gotk3/gdk"
+	_ "embed"
 	"io/ioutil"
 	"log"
 	"os/exec"
 	"runtime"
-    _ "embed"
+
+	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 )
 
@@ -30,7 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
 	}
-	
+
 	win.SetTitle("Kindworks Startup")
 	win.Connect("destroy", func() {
 		gtk.MainQuit()
@@ -122,6 +123,14 @@ func main() {
 	}
 	firefoxButton.Connect("clicked", launchFirefox)
 	appBox.PackStart(firefoxButton, true, true, 0)
+
+	// web button
+	WebButton, err := gtk.ButtonNewWithLabel("Web")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+	WebButton.Connect("clicked", launchWeb)
+	appBox.PackStart(WebButton, true, true, 0)
 
 	// Add a button for LibreOffice.
 
@@ -234,6 +243,13 @@ func openPDF() {
 	err = exec.Command("xdg-open", tempFile.Name()).Start()
 	if err != nil {
 		log.Println("Could not open PDF:", err)
+	}
+}
+
+func launchWeb() {
+	err := exec.Command("epiphany-browser").Start()
+	if err != nil {
+		log.Println("Could not launch application:", err)
 	}
 }
 
